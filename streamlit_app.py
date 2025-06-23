@@ -3,7 +3,6 @@ import streamlit as st
 
 
 st.write("Καλώς ήρθες ...")
-st.write(st.session_state.logged_in)
 
 
 if "logged_in" not in st.session_state:
