@@ -10,6 +10,10 @@ def login_screen():
     st.button("Log in with Google", on_click=st.login)
 
 
+if not st.user.is_logged_in:
+    login_screen()
+else:
+    st.user
 
 
 # if "logged_in" not in st.session_state:
