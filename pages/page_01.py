@@ -3,6 +3,8 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 worksheet_classes = "1787667360"
 worksheet_students = "1985906332"
+worksheet_dokimasies = "843658394"
+worksheet_apotelesmata_dokimasias = "606650409"
 
 # Σχολεία
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -50,9 +52,27 @@ df_temp_2 = conn.query(worksheet=worksheet_students, sql=sql_2, ttl=3600)
 
 st.write(df_temp_2)
 
+# Πίνακας με τις δοκιμασίες της τάξης
+sql_3 = f'select * from "dokimasies" WHERE class_id={selected_class_id}'
+df_temp_3 = conn.query(worksheet=worksheet_dokimasies, sql=sql_3, ttl=3600)
+
+st.write(df_temp_3)
 
 
-# st.write("This is Page 01")
+# Αποτελέσματα δοκιμασίας για κάθε μαθητή
+
+# loop στους μαθητές
+for row in df_temp_2.itertuples():
+    st.write(f"Ο μαθητής {row.name} έγραψε τις παρακάτω δοκιμασίες")
+    # loop στις δοκιμασίες
+    for row_2 in df_temp_3.itertuples():
+        sql_temp = f'select * from "apotelesmata_dokimasias" WHERE student_id={row.id} and dokimasia_id={row_2.id}'
+        df_temp_4 = conn.query(worksheet=worksheet_apotelesmata_dokimasias, sql=sql_temp, ttl=3600)
+        # st.write(df_temp_4)
+        # loop στα αποτελέσματα δοκιμασιών
+        for row_3 in df_temp_4.itertuples():
+            st.write(f"{row_2.name} --> {row_3.vathmos} στα {row_2.arista}")
+
 
 
 
