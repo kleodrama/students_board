@@ -15,8 +15,16 @@ def logout_screen():
 
 
 if (not st.user) or (not st.user.is_logged_in):
-    st.session_state.logged_in = False
+
+    ##########################
+    # st.session_state.logged_in = False
+    ##########################
+
     # login_screen()
+
+    st.badge("fake user!!", icon=":material/check:", color="green")
+    st.session_state.logged_in = True
+
 else:
     st.badge(st.user.given_name, icon=":material/check:", color="green")
     st.session_state.logged_in = True
@@ -31,15 +39,16 @@ dashboard = st.Page("pages/dashboard.py", title="Σχολεία", icon=":materia
 page_01 = st.Page("pages/page_01.py", title="Πίνακας", icon=":material/bug_report:")
 page_02 = st.Page("pages/page_02.py", title="page 2", icon=":material/notification_important:")
 
-search = st.Page("pages/search.py", title="Search", icon=":material/search:")
-history = st.Page("pages/history.py", title="History", icon=":material/history:")
+school = st.Page("pages/search.py", title="Σχολείο", icon=":material/search:")
+_class = st.Page("pages/history.py", title="Τμήμα", icon=":material/history:")
+student = st.Page("pages/student.py", title="Μαθητής", icon=":material/history:")
 
 if st.session_state.logged_in:
     pg = st.navigation(
         {
             "Λογαριασμός": [logout_page],
             "Σελίδες": [dashboard, page_01, page_02],
-            "Ρυθμίσεις": [search, history],
+            "Προσθήκη": [school, _class, student],
         }
     )
 else:

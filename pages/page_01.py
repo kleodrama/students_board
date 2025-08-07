@@ -1,6 +1,8 @@
 
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
+import pandas as pd
+
 worksheet_classes = "1787667360"
 worksheet_students = "1985906332"
 worksheet_dokimasies = "843658394"
@@ -46,32 +48,83 @@ selected_class = st.selectbox(
 selected_class_id = selected_class[0]
 # st.write("You selected class with id:", selected_class_id)
 
-# Πίνακας με τους μαθητές
-sql_2 = f'select * from "students" WHERE class_id={selected_class_id}'
-df_temp_2 = conn.query(worksheet=worksheet_students, sql=sql_2, ttl=3600)
-
-st.write(df_temp_2)
-
-# Πίνακας με τις δοκιμασίες της τάξης
-sql_3 = f'select * from "dokimasies" WHERE class_id={selected_class_id}'
-df_temp_3 = conn.query(worksheet=worksheet_dokimasies, sql=sql_3, ttl=3600)
-
-st.write(df_temp_3)
 
 
-# Αποτελέσματα δοκιμασίας για κάθε μαθητή
 
-# loop στους μαθητές
-for row in df_temp_2.itertuples():
-    st.write(f"Ο μαθητής {row.name} έγραψε τις παρακάτω δοκιμασίες")
-    # loop στις δοκιμασίες
-    for row_2 in df_temp_3.itertuples():
-        sql_temp = f'select * from "apotelesmata_dokimasias" WHERE student_id={row.id} and dokimasia_id={row_2.id}'
-        df_temp_4 = conn.query(worksheet=worksheet_apotelesmata_dokimasias, sql=sql_temp, ttl=3600)
-        # st.write(df_temp_4)
-        # loop στα αποτελέσματα δοκιμασιών
-        for row_3 in df_temp_4.itertuples():
-            st.write(f"{row_2.name} --> {row_3.vathmos} στα {row_2.arista}")
+
+
+tab1, tab2, tab3 = st.tabs(["Α Τετράμηνο", "Β Τετράμηνο", "Εξετάσεις"])
+with tab1:
+    # Πίνακας με τους μαθητές
+    sql_2 = f'select * from "students" WHERE class_id={selected_class_id}'
+    df_temp_2 = conn.query(worksheet=worksheet_students, sql=sql_2, ttl=3600)
+
+    st.write(df_temp_2)
+
+    # Ανάκτηση όλων των δοκιμασιών για το τμήμα
+    # Πίνακας με τις δοκιμασίες του τμήματος
+    sql_3 = f'select * from "dokimasies" WHERE class_id={selected_class_id}'
+    df_temp_3 = conn.query(worksheet=worksheet_dokimasies, sql=sql_3, ttl=3600)
+
+    # Όλα τα αποτελέσματα δοκιμασιών για τις δοκιμασίες του τμήματος
+    st.write(df_temp_3)
+    list_dokimasies = list()
+    for i in df_temp_3.itertuples():
+        list_dokimasies.append(i.id)
+    if len(list_dokimasies) > 0:
+        sql_apotelesmata_dokimasion = f'SELECT * FROM apotelesmata_dokimasias WHERE dokimasia_id IN {list_dokimasies}'
+        df_temp_apotelesmata_dokimasion = conn.query(worksheet=worksheet_apotelesmata_dokimasias, sql=sql_apotelesmata_dokimasion, ttl=3600)
+        # st.write(df_temp_apotelesmata_dokimasion)
+    else:
+        df_temp_apotelesmata_dokimasion = None
+        st.write("Δεν υπάρχουν δοκιμασίες για υτό το τμήμα.")
+with tab2:
+    st.header("Λίστα με βαθμούς κλπ κλπ")
+
+    titles = list()
+    titles.append('id')
+    titles.append('Επώνυμο')
+    titles.append('Όνομα')
+    for i in df_temp_3.itertuples():
+        titles.append(i.name)
+
+    # loop στους μαθητές
+    eponima = list()
+    names = list()
+
+    list_mathites = list()
+
+    if df_temp_apotelesmata_dokimasion is not None:
+        dataframe_apotelesmata_dokimasion = pd.DataFrame(df_temp_apotelesmata_dokimasion, columns=['id', 'student_id', 'dokimasia_id', 'vathmos'])
+    else:
+        dataframe_apotelesmata_dokimasion = None
+    apotelesmata_dokimasion = list()
+    for row in df_temp_2.itertuples():
+
+        list_mathiti = list()
+        list_mathiti.append(row.id)
+        list_mathiti.append(row.surname)
+        list_mathiti.append(row.name)
+
+        # loop στις δοκιμασιες
+        for i in df_temp_3.itertuples():
+            apotelesma = dataframe_apotelesmata_dokimasion.query(f'dokimasia_id=={i.id} and student_id=={row.id}')["vathmos"]
+            if apotelesma.empty:
+                list_mathiti.append(None)
+            else:
+                list_mathiti.append(apotelesma.to_numpy())
+
+        list_mathites.append(list_mathiti)
+
+    dataframe_mathites = pd.DataFrame(list_mathites, columns = titles)
+    st.write(dataframe_mathites)
+
+with tab3:
+    st.header("An owl")
+    st.image("https://static.streamlit.io/examples/owl.jpg", width=200)
+
+
+
 
 
 
